@@ -9,7 +9,7 @@ describe('connect-pg', function () {
 		expect(typeof PGStore).toEqual('function');
 	});
 	
-	it('should create an object based on connect\'s Store', function () {
+	it("should create an object based on connect's Store", function () {
 		var pgStore = new PGStore();
 		var parent = Object.getPrototypeOf(pgStore);
 		expect(Object.getPrototypeOf(parent)).toEqual(Store.prototype);
