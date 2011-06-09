@@ -35,14 +35,14 @@ describe('connect-pg', function () {
 		});
 	});
 	
-	describe('set function', function (){
+	describe('set function', function () {
 		it('should have a set session function', function () {
 			expect(typeof this.pgStore.set).toEqual('function');
 		});
 		
 		it('should call the postgresql database', function () {
-			spyOn(pg, 'connect');
-			this.pgStore.set('fred', {rubble: 'barney'}, function () {});
+			spyOn(pg, 'connect').andCallThrough();
+			this.pgStore.set('fred', {rubble: 'barney'});
 			expect(pg.connect).toHaveBeenCalled();
 		});
 		
@@ -51,12 +51,11 @@ describe('connect-pg', function () {
 			this.pgStore.set('fred', {rubble: 'barney'}, callback);
 			expect(callback).toHaveBeenCalled();
 		});
-		
-		it('should work without a callback function', function () {
-			var pgStore = this.pgStore;
-			expect(function () {
-				pgStore.set('fred', {rubble: 'barney'});
-			}).not.toThrow();
+	});
+	
+	describe('get function', function () {
+		it('should have a get session function', function () {
+			expect(typeof this.pgStore.get).toEqual('function');
 		});
 	});
 });
