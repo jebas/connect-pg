@@ -57,5 +57,14 @@ describe('connect-pg', function () {
 		it('should have a get session function', function () {
 			expect(typeof this.pgStore.get).toEqual('function');
 		});
+		
+		it('should feed the callback with session data', function () {
+			var callback = jasmine.createSpy();
+			var sessData = {'flintstone': 'fred',
+					        'rubble': 'barney'};
+			this.pgStore.set('bedrock', sessData);
+			this.pgStore.get('bedrock', callback);
+			expect(callback).toHaveBeenCalledWith([null, sessData]);
+		});
 	});
 });
