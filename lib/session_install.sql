@@ -33,3 +33,11 @@ returns text as $$
 		return sessdata;
 	end;
 $$ language plpgsql;
+
+create or replace function destroy_session(sessid text)
+returns void as $$
+	begin
+		delete from connect_session where sess_id = sessid;
+		return;
+	end;
+$$ language plpgsql;

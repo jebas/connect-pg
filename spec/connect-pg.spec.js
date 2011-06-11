@@ -85,4 +85,35 @@ describe('connect-pg', function () {
 			});
 		});
 	});
+	
+	describe('destroy function', function () {
+		it('should have a destroy function', function () {
+			expect(typeof this.pgStore.destroy).toEqual('function');
+		});
+		
+		it('should remove the session', function () {
+			var callback = jasmine.createSpy();
+			var sessData = {'flintstone': 'fred',
+			        'rubble': 'barney'};
+			this.pgStore.set('bedrock', sessData);
+			waits(1000);
+			runs(function () {
+				this.pgStore.destroy('bedrock');				
+			});
+			waits(1000);
+			runs(function () {
+				this.pgStore.get('bedrock', callback);				
+			});
+			waits(1000);
+			runs(function () {
+				expect(callback.mostRecentCall.args.length).toEqual(0);
+			});
+		});
+	});
+	
+	describe('clear function', function () {
+		it('should have a clear function', function () {
+			expect(typeof this.pgStore.clear).toEqual('function');
+		});
+	});
 });
