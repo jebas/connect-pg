@@ -43,13 +43,19 @@ describe('connect-pg', function () {
 		it('should call the postgresql database', function () {
 			spyOn(pg, 'connect').andCallThrough();
 			this.pgStore.set('fred', {rubble: 'barney'});
-			expect(pg.connect).toHaveBeenCalled();
+			waits(1000);
+			runs(function () {
+				expect(pg.connect).toHaveBeenCalled();
+			});
 		});
 		
 		it('should return by using the callback function', function () {
 			var callback = jasmine.createSpy();
 			this.pgStore.set('fred', {rubble: 'barney'}, callback);
-			expect(callback).toHaveBeenCalled();
+			waits(1000);
+			runs(function () {
+				expect(callback).toHaveBeenCalled();				
+			});
 		});
 	});
 	
@@ -63,8 +69,20 @@ describe('connect-pg', function () {
 			var sessData = {'flintstone': 'fred',
 					        'rubble': 'barney'};
 			this.pgStore.set('bedrock', sessData);
-			this.pgStore.get('bedrock', callback);
-			expect(callback).toHaveBeenCalledWith([null, sessData]);
+			this.pgStore.get('bedrock', callback);				
+			waits(1000);
+			runs(function () {
+				expect(callback.mostRecentCall.args[1]).toEqual(sessData);
+			});
+		});
+		
+		it('should return the callback with no arguments if there is no session', function () {
+			var callback = jasmine.createSpy();
+			this.pgStore.get('munster', callback);
+			waits(1000);
+			runs(function () {
+				expect(callback.mostRecentCall.args.length).toEqual(0);
+			});
 		});
 	});
 });
