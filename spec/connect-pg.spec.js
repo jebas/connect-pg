@@ -9,6 +9,19 @@ describe('connect-pg', function () {
 	beforeEach(function () {
 		this.options = {pgConnect: "tcp://thetester:password@localhost/pgstore"};
 		this.pgStore = new PGStore(this.options);
+		this.sessID1 = "bedrockBoys";
+		this.sessData1 = {'flintstone': 'fred',
+				'rubble': 'barney'};
+		this.sessID2 = "bedrockGirls";
+		this.sessData2 = {'flintstone': 'wilma',
+				'rubble': 'betty'};
+		this.callback1 = jasmine.createSpy();
+		this.callback2 = jasmine.createSpy();
+	});
+	
+	afterEach(function () {
+		this.pgStore.destroy(this.sessID1);
+		this.pgStore.destroy(this.sessID2);
 	});
 	
 	describe('constructor', function () {
@@ -42,7 +55,7 @@ describe('connect-pg', function () {
 		
 		it('should call the postgresql database', function () {
 			spyOn(pg, 'connect').andCallThrough();
-			this.pgStore.set('fred', {rubble: 'barney'});
+			this.pgStore.set(this.sessID1, this.sessData1);
 			waits(1000);
 			runs(function () {
 				expect(pg.connect).toHaveBeenCalled();
@@ -50,11 +63,10 @@ describe('connect-pg', function () {
 		});
 		
 		it('should return by using the callback function', function () {
-			var callback = jasmine.createSpy();
-			this.pgStore.set('fred', {rubble: 'barney'}, callback);
+			this.pgStore.set(this.sessID1, this.sessData1, this.callback1);
 			waits(1000);
 			runs(function () {
-				expect(callback).toHaveBeenCalled();				
+				expect(this.callback1).toHaveBeenCalled();				
 			});
 		});
 	});
@@ -65,23 +77,22 @@ describe('connect-pg', function () {
 		});
 		
 		it('should feed the callback with session data', function () {
-			var callback = jasmine.createSpy();
-			var sessData = {'flintstone': 'fred',
-					        'rubble': 'barney'};
-			this.pgStore.set('bedrock', sessData);
-			this.pgStore.get('bedrock', callback);				
+			this.pgStore.set(this.sessID1, this.sessData1);
 			waits(1000);
 			runs(function () {
-				expect(callback.mostRecentCall.args[1]).toEqual(sessData);
+				this.pgStore.get(this.sessID1, this.callback1);				
+			});
+			waits(1000);
+			runs(function () {
+				expect(this.callback1.mostRecentCall.args[1]).toEqual(this.sessData1);
 			});
 		});
 		
 		it('should return the callback with no arguments if there is no session', function () {
-			var callback = jasmine.createSpy();
-			this.pgStore.get('munster', callback);
+			this.pgStore.get('munster', this.callback1);
 			waits(1000);
 			runs(function () {
-				expect(callback.mostRecentCall.args.length).toEqual(0);
+				expect(this.callback1.mostRecentCall.args.length).toEqual(0);
 			});
 		});
 	});
@@ -92,21 +103,21 @@ describe('connect-pg', function () {
 		});
 		
 		it('should remove the session', function () {
-			var callback = jasmine.createSpy();
-			var sessData = {'flintstone': 'fred',
-			        'rubble': 'barney'};
-			this.pgStore.set('bedrock', sessData);
+			this.pgStore.set(this.sessID1, this.sessData1);
+			this.pgStore.set(this.sessID2, this.sessData2);
 			waits(1000);
 			runs(function () {
-				this.pgStore.destroy('bedrock');				
+				this.pgStore.destroy(this.sessID1);				
 			});
 			waits(1000);
 			runs(function () {
-				this.pgStore.get('bedrock', callback);				
+				this.pgStore.get(this.sessID1, this.callback1);
+				this.pgStore.get(this.sessID2, this.callback2);
 			});
 			waits(1000);
 			runs(function () {
-				expect(callback.mostRecentCall.args.length).toEqual(0);
+				expect(this.callback1.mostRecentCall.args.length).toEqual(0);
+				expect(this.callback2.mostRecentCall.args[1]).toEqual(this.sessData2);
 			});
 		});
 	});
