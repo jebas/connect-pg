@@ -20,8 +20,7 @@ describe('connect-pg', function () {
 	});
 	
 	afterEach(function () {
-		this.pgStore.destroy(this.sessID1);
-		this.pgStore.destroy(this.sessID2);
+		this.pgStore.clear();
 	});
 	
 	describe('constructor', function () {
@@ -125,6 +124,33 @@ describe('connect-pg', function () {
 	describe('clear function', function () {
 		it('should have a clear function', function () {
 			expect(typeof this.pgStore.clear).toEqual('function');
+		});
+		
+		it('should remove all of the sessions', function () {
+			this.pgStore.set(this.sessID1, this.sessData1);
+			this.pgStore.set(this.sessID2, this.sessData2);
+			waits(1000);
+			runs(function () {
+				this.pgStore.clear();
+			});
+			waits(1000);
+			runs(function () {
+				this.pgStore.get(this.sessID1, this.callback1);
+				this.pgStore.get(this.sessID2, this.callback2);
+			});
+			waits(1000);
+			runs(function () {
+				expect(this.callback1.mostRecentCall.args.length).toEqual(0);
+				expect(this.callback2.mostRecentCall.args.length).toEqual(0);
+			});
+		});
+		
+		it('should accept a callback function', function () {
+			this.pgStore.clear(this.callback1);
+			waits(1000);
+			runs(function () {
+				expect(this.callback1).toHaveBeenCalled();				
+			});
 		});
 	});
 });

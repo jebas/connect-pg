@@ -41,3 +41,11 @@ returns void as $$
 		return;
 	end;
 $$ language plpgsql;
+
+create or replace function clear_sessions()
+returns void as $$
+	begin
+		delete from connect_session;
+		return;
+	end;
+$$ language plpgsql;

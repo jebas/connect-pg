@@ -3,7 +3,7 @@
 -- If this were an MCV setup the database is treated as the model.
 
 begin;
-select plan(14);
+select plan(16);
 
 -- table tests
 select has_table('connect_session', 'There should be a session table.');
@@ -48,6 +48,15 @@ select has_function('destroy_session', array['text'], 'Needs to have a destroy f
 -- This is using previous tests.  
 select destroy_session('bedrock');
 select results_eq('session_get', array[null], 'Data needs to be deleted');
+
+-- clear function tests
+select has_function('clear_sessions', 'Needs a clear function.');
+
+-- clear removes all data.
+select set_session_data('flintstone', 'fred');
+select set_session_data('rubble', 'barney');
+select clear_sessions();
+select results_eq('select cast(count(*) as int) from connect_session', 'values (0)', 'There should be no data available.');
 
 select * from finish();
 rollback;
