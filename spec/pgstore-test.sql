@@ -3,7 +3,7 @@
 -- If this were an MCV setup the database is treated as the model.
 
 begin;
-select plan(18);
+select plan(20);
 
 -- table tests
 select has_table('connect_session', 'There should be a session table.');
@@ -66,6 +66,17 @@ select clear_sessions();
 select set_session_data('flintstone', 'fred');
 select set_session_data('rubble', 'barney');
 select results_eq('select count_sessions()', 'values (2)', 'This should equal the total number of records.');
+
+-- all function tests.
+select has_function('all_session_ids', 'Needs a listing of all session ids.');
+
+-- test all returns
+select clear_sessions();
+select set_session_data('flintstone', 'fred');
+select set_session_data('rubble', 'barney');
+select set_session_data('slade', 'mister');
+prepare session_ids as values ('flintstone'), ('rubble'), ('slade');
+select results_eq('select all_session_ids()', 'session_ids', 'It should return all ids.');
 
 select * from finish();
 rollback;

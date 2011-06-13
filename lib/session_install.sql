@@ -59,3 +59,11 @@ returns int as $$
 		return thecount;
 	end;
 $$ language plpgsql;
+
+create or replace function all_session_ids()
+returns setof text as $$
+	begin
+		return query select sess_id from connect_session;
+		return;
+	end;
+$$ language plpgsql;

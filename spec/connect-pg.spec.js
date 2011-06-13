@@ -180,4 +180,25 @@ describe('connect-pg', function () {
 			});
 		});
 	});
+	
+	describe('all function', function () {
+		it('should have an all function', function () {
+			expect(typeof this.pgStore.all).toEqual('function');
+		});
+		
+		it('should return an array of session ids', function () {
+			this.pgStore.set(this.sessID1, this.sessData1);
+			this.pgStore.set(this.sessID2, this.sessData2);
+			waits(1000);
+			runs(function () {
+				this.pgStore.all(this.callback1);
+			});
+			waits(1000);
+			runs(function () {
+				expect(this.callback1.mostRecentCall.args[1].length).toEqual(2);
+				expect(this.callback1.mostRecentCall.args[1]).toContain(this.sessID1);
+				expect(this.callback1.mostRecentCall.args[1]).toContain(this.sessID2);
+			});
+		});
+	});
 });
