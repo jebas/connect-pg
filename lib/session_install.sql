@@ -49,3 +49,13 @@ returns void as $$
 		return;
 	end;
 $$ language plpgsql;
+
+create or replace function count_sessions()
+returns int as $$
+	declare
+		thecount int := 0;
+	begin
+		select count(*) into thecount from connect_session;
+		return thecount;
+	end;
+$$ language plpgsql;

@@ -119,6 +119,14 @@ describe('connect-pg', function () {
 				expect(this.callback2.mostRecentCall.args[1]).toEqual(this.sessData2);
 			});
 		});
+		
+		it('should accept a callback function', function () {
+			this.pgStore.destroy(this.sessID1, this.callback1);
+			waits(1000);
+			runs(function () {
+				expect(this.callback1).toHaveBeenCalled();				
+			});
+		});		
 	});
 	
 	describe('clear function', function () {
@@ -150,6 +158,25 @@ describe('connect-pg', function () {
 			waits(1000);
 			runs(function () {
 				expect(this.callback1).toHaveBeenCalled();				
+			});
+		});
+	});
+	
+	describe('length function', function () {
+		it('should have a length function', function () {
+			expect(typeof this.pgStore.length).toEqual('function');
+		});
+		
+		it('should return to the callback the total number of sessions', function () {
+			this.pgStore.set(this.sessID1, this.sessData1);
+			this.pgStore.set(this.sessID2, this.sessData2);
+			waits(1000);
+			runs(function () {
+				this.pgStore.length(this.callback1);
+			});
+			waits(1000);
+			runs(function () {
+				expect(this.callback1.mostRecentCall.args[1]).toEqual(2);
 			});
 		});
 	});

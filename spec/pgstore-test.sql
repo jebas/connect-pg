@@ -3,7 +3,7 @@
 -- If this were an MCV setup the database is treated as the model.
 
 begin;
-select plan(16);
+select plan(18);
 
 -- table tests
 select has_table('connect_session', 'There should be a session table.');
@@ -57,6 +57,15 @@ select set_session_data('flintstone', 'fred');
 select set_session_data('rubble', 'barney');
 select clear_sessions();
 select results_eq('select cast(count(*) as int) from connect_session', 'values (0)', 'There should be no data available.');
+
+-- length function tests.
+select has_function('count_sessions', 'Needs a count for the length function.'); 
+
+-- length counts the number of records.
+select clear_sessions();
+select set_session_data('flintstone', 'fred');
+select set_session_data('rubble', 'barney');
+select results_eq('select count_sessions()', 'values (2)', 'This should equal the total number of records.');
 
 select * from finish();
 rollback;
