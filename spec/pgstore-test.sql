@@ -3,7 +3,7 @@
 -- If this were an MCV setup the database is treated as the model.
 
 begin;
-select plan(20);
+select plan(23);
 
 -- table tests
 select has_table('connect_session', 'There should be a session table.');
@@ -15,13 +15,17 @@ select col_is_pk('connect_session', 'sess_id', 'The session id is the primary ke
 select has_column('connect_session', 'sess_data', 'Needs to store the session data.');
 select col_type_is('connect_session', 'sess_data', 'text', 'Session data is text.');
 
+select has_column('connect_session', 'expiration', 'Needs a time limit on the session.');
+select col_type_is('connect_session', 'expiration', 'timestamp without time zone', 'expiration needs to be a timestamp.');
+select col_has_default('connect_session', 'expiration', 'Needs a default of + one day.');
+
 -- set function tests
 select has_function('set_session_data', array['text', 'text'], 'Needs a set session data function.');
 
 -- set function adds data
 select clear_sessions();
 select set_session_data('bedrock', 'Fred Flintstone');
-prepare session_test as select * from connect_session;
+prepare session_test as select sess_id, sess_data from connect_session;
 prepare initial_session as values ('bedrock', 'Fred Flintstone');
 select results_eq('session_test', 'initial_session', 'set_session_data needs to enter data.');
 
@@ -74,11 +78,11 @@ select results_eq('select count_sessions()', 'values (2)', 'This should equal th
 select has_function('all_session_ids', 'Needs a listing of all session ids.');
 
 -- test all returns
+prepare session_ids as values ('flintstone'), ('rubble'), ('slade');
 select clear_sessions();
 select set_session_data('flintstone', 'fred');
 select set_session_data('rubble', 'barney');
 select set_session_data('slade', 'mister');
-prepare session_ids as values ('flintstone'), ('rubble'), ('slade');
 select results_eq('select all_session_ids()', 'session_ids', 'It should return all ids.');
 
 select * from finish();

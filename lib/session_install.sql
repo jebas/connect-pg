@@ -2,7 +2,8 @@
 
 create table connect_session (
 	sess_id text primary key,
-	sess_data text
+	sess_data text,
+	expiration timestamp default now() + interval '1 day'
 );
 
 create or replace function set_session_data(sessid text, sessdata text) 
