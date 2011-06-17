@@ -3,19 +3,26 @@
 create table connect_session (
 	sess_id text primary key,
 	sess_data text,
-	expiration timestamp default now() + interval '1 day'
+	expiration timestamp with time zone default now() + interval '1 day'
 );
 
-create or replace function set_session_data(sessid text, sessdata text) 
+create or replace function set_session_data(
+	sessid text, 
+	sessdata text, 
+	expire timestamp with time zone) 
 returns void as $$
 	begin
 		loop
-			update connect_session set sess_data = sessdata where sess_id = sessid;
+			update connect_session 
+				set sess_data = sessdata, 
+					expiration = expire 
+				where sess_id = sessid;
 			if found then
 				return;
 			end if;
 			begin
-				insert into connect_session (sess_id, sess_data) values (sessid, sessdata);
+				insert into connect_session (sess_id, sess_data, expiration) 
+					values (sessid, sessdata, expire);
 				return;
 			exception
 				when unique_violation then
@@ -30,7 +37,10 @@ returns text as $$
 	declare
 		sessdata text;
 	begin
-		select sess_data into sessdata from connect_session where sess_id = sessid;
+		select sess_data into sessdata 
+			from connect_session 
+			where sess_id = sessid 
+				and (expiration > now() or expiration isnull);
 		return sessdata;
 	end;
 $$ language plpgsql;

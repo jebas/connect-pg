@@ -10,16 +10,20 @@ describe('connect-pg', function () {
 		this.options = {pgConnect: "tcp://thetester:password@localhost/pgstore"};
 		this.pgStore = new PGStore(this.options);
 		this.sessID1 = "bedrockBoys";
-		this.sessData1 = {'flintstone': 'fred',
+		this.sessData1 = {
+				'flintstone': 'fred',
 				'rubble': 'barney'};
 		this.sessID2 = "bedrockGirls";
-		this.sessData2 = {'flintstone': 'wilma',
+		this.sessData2 = {
+				'flintstone': 'wilma',
 				'rubble': 'betty'};
 		this.callback1 = jasmine.createSpy();
 		this.callback2 = jasmine.createSpy();
 	});
 	
 	afterEach(function () {
+		delete this.sessData1;
+		delete this.sessData2;
 		this.pgStore.clear();
 	});
 	
@@ -68,6 +72,27 @@ describe('connect-pg', function () {
 				expect(this.callback1).toHaveBeenCalled();				
 			});
 		});
+		
+		it('should accept expiration data as a date', function () {
+			var pgStore = this.pgStore;
+			var sessID1 = this.sessID1;
+			var sessData1 = this.sessData1;
+			sessData1['cookie'] = {'expires': new Date};
+			expect(function () {
+				pgStore.set(sessID1, sessData1);
+			}).not.toThrow();
+		});
+		
+		it('should accept expiration date as a string', function () {
+			var theDate = new Date;
+			var pgStore = this.pgStore;
+			var sessID1 = this.sessID1;
+			var sessData1 = this.sessData1;
+			sessData1['cookie'] = {'expires': theDate.toString()};
+			expect(function () {
+				pgStore.set(sessID1, sessData1);
+			}).not.toThrow();
+		});
 	});
 	
 	describe('get function', function () {
@@ -89,6 +114,21 @@ describe('connect-pg', function () {
 		
 		it('should return the callback with no arguments if there is no session', function () {
 			this.pgStore.get('munster', this.callback1);
+			waits(1000);
+			runs(function () {
+				expect(this.callback1.mostRecentCall.args.length).toEqual(0);
+			});
+		});
+		
+		it('should not retrieve an expired session', function () {
+			var theDate = new Date;
+			theDate.setDate(theDate.getDate() - 1);
+			this.sessData1['cookie'] = {'expires': theDate};
+			this.pgStore.set(this.sessID1, this.sessData1);
+			waits(1000);
+			runs(function () {
+				this.pgStore.get(this.sessID1, this.callback1);				
+			});
 			waits(1000);
 			runs(function () {
 				expect(this.callback1.mostRecentCall.args.length).toEqual(0);
@@ -188,7 +228,10 @@ describe('connect-pg', function () {
 		
 		it('should return an array of session ids', function () {
 			this.pgStore.set(this.sessID1, this.sessData1);
-			this.pgStore.set(this.sessID2, this.sessData2);
+			waits(1000);
+			runs(function () {
+				this.pgStore.set(this.sessID2, this.sessData2);				
+			});
 			waits(1000);
 			runs(function () {
 				this.pgStore.all(this.callback1);
