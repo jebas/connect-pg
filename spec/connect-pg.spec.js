@@ -18,7 +18,15 @@ describe('connect-pg', function () {
 				'flintstone': 'wilma',
 				'rubble': 'betty'};
 		this.callback1 = jasmine.createSpy();
+		this.callback1Prev = 0;
+		this.callback1Called = function () {
+			return this.callback1Prev != this.callback1.callCount;
+		};
 		this.callback2 = jasmine.createSpy();
+		this.callback2Prev = 0;
+		this.callback2Called = function () {
+			return this.callback2Prev != this.callback2.callCount;
+		};
 	});
 	
 	afterEach(function () {
@@ -57,20 +65,39 @@ describe('connect-pg', function () {
 		});
 		
 		it('should call the postgresql database', function () {
+			var previousCallbackCount = this.callback1.callCount;
+			spyOn(pg, 'connect').andCallThrough();
+			this.pgStore.set(this.sessID1, this.sessData1, this.callback1);
+			waitsFor(this.callback1Called, 'Waiting on the callback', 10000);
+			runs(function () {
+				expect(pg.connect).toHaveBeenCalled();
+			});
+			
+			/*
 			spyOn(pg, 'connect').andCallThrough();
 			this.pgStore.set(this.sessID1, this.sessData1);
 			waits(1000);
 			runs(function () {
 				expect(pg.connect).toHaveBeenCalled();
 			});
+			*/
 		});
 		
 		it('should return by using the callback function', function () {
+			var previousCallbackCounter = this.callback1.callCount;
+			this.pgStore.set(this.sessID1, this.sessData1, this.callback1);
+			waitsFor(this.callback1Called, 'Waiting on the callback', 10000);
+			runs(function () {
+				expect(this.callback1).toHaveBeenCalled();
+			});
+			
+			/*
 			this.pgStore.set(this.sessID1, this.sessData1, this.callback1);
 			waits(1000);
 			runs(function () {
 				expect(this.callback1).toHaveBeenCalled();				
 			});
+			*/
 		});
 		
 		it('should accept expiration data as a date', function () {
@@ -101,6 +128,18 @@ describe('connect-pg', function () {
 		});
 		
 		it('should feed the callback with session data', function () {
+			this.pgStore.set(this.sessID1, this.sessData1, this.callback1);
+			waitsFor(this.callback1Called, 'Waiting on callback', 10000);
+			runs(function () {
+				this.callback1Prev = this.callback1.callCount;
+				this.pgStore.get(this.sessID1, this.callback1);
+				waitsFor(this.callback1Called, 'Waiting on get callback', 10000);
+				runs(function () {
+					expect(this.callback1.mostRecentCall.args[1]).toEqual(this.sessData1);
+				});
+			});
+			
+			/*
 			this.pgStore.set(this.sessID1, this.sessData1);
 			waits(1000);
 			runs(function () {
@@ -110,17 +149,41 @@ describe('connect-pg', function () {
 			runs(function () {
 				expect(this.callback1.mostRecentCall.args[1]).toEqual(this.sessData1);
 			});
+			*/
 		});
 		
 		it('should return the callback with no arguments if there is no session', function () {
+			this.pgStore.get('munster', this.callback1);
+			waitsFor(this.callback1Called, 'Waiting for callback', 10000);
+			runs(function () {
+				expect(this.callback1.mostRecentCall.args.length).toEqual(0);
+			});
+			
+			/*
 			this.pgStore.get('munster', this.callback1);
 			waits(1000);
 			runs(function () {
 				expect(this.callback1.mostRecentCall.args.length).toEqual(0);
 			});
+			*/
 		});
 		
 		it('should not retrieve an expired session', function () {
+			var theDate = new Date;
+			theDate.setDate(theDate.getDate() - 1);
+			this.sessData1['cookie'] = {'expires': theDate};
+			this.pgStore.set(this.sessID1, this.sessData1, this.callback1);
+			waitsFor(this.callback1Called, 'Waiting for callback', 10000);
+			runs(function () {
+				this.callback1Prev = this.callback1.callCount;
+				this.pgStore.get(this.sessID1, this.callback1);
+				waitsFor(this.callback1Called, 'Waiting on get callback', 10000);
+				runs(function () {
+					expect(this.callback1.mostRecentCall.args.length).toEqual(0);
+				});
+			});
+			
+			/*
 			var theDate = new Date;
 			theDate.setDate(theDate.getDate() - 1);
 			this.sessData1['cookie'] = {'expires': theDate};
@@ -133,6 +196,7 @@ describe('connect-pg', function () {
 			runs(function () {
 				expect(this.callback1.mostRecentCall.args.length).toEqual(0);
 			});
+			*/
 		});
 	});
 	
@@ -142,6 +206,32 @@ describe('connect-pg', function () {
 		});
 		
 		it('should remove the session', function () {
+			this.pgStore.set(this.sessID1, this.sessData1, this.callback1);
+			this.pgStore.set(this.sessID2, this.sessData2, this.callback2);
+			waitsFor(function () {
+				return this.callback1Called() && this.callback2Called();
+			}, 'Waiting for sets to complete', 10000);
+			runs(function () {
+				this.callback1Prev = this.callback1.callCount;
+				this.callback2Prev = this.callback2.callCount;
+				this.pgStore.destroy(this.sessID1, this.callback1);
+				waitsFor(this.callback1Called, 'Waiting on destroy', 10000);
+				runs(function () {
+					this.callback1Prev = this.callback1.callCount;
+					this.callback2Prev = this.callback2.callCount;
+					this.pgStore.get(this.sessID1, this.callback1);
+					this.pgStore.get(this.sessID2, this.callback2);
+					waitsFor(function () {
+						return this.callback1Called() && this.callback2Called();
+					}, 'Waiting for sets to complete', 10000);
+					runs(function () {
+						expect(this.callback1.mostRecentCall.args.length).toEqual(0);
+						expect(this.callback2.mostRecentCall.args[1]).toEqual(this.sessData2);
+					});
+				});
+			});
+			
+			/*
 			this.pgStore.set(this.sessID1, this.sessData1);
 			this.pgStore.set(this.sessID2, this.sessData2);
 			waits(1000);
@@ -158,6 +248,7 @@ describe('connect-pg', function () {
 				expect(this.callback1.mostRecentCall.args.length).toEqual(0);
 				expect(this.callback2.mostRecentCall.args[1]).toEqual(this.sessData2);
 			});
+			*/
 		});
 		
 		it('should accept a callback function', function () {
@@ -219,6 +310,28 @@ describe('connect-pg', function () {
 				expect(this.callback1.mostRecentCall.args[1]).toEqual(2);
 			});
 		});
+		
+		it('should not count expired sessions', function () {
+			var Date1 = new Date;
+			Date1.setDate(Date1.getDate() + 1);
+			this.sessData1['cookie'] = {'expires': Date1};
+			var Date2 = new Date;
+			Date2.setDate(Date2.getDate() - 1);
+			this.sessData2['cookie'] = {'expires': Date2};
+			this.pgStore.set(this.sessID1, this.sessData1);
+			waits(1000);
+			runs(function () {
+				this.pgStore.set(this.sessID2, this.sessData2);				
+			});
+			waits(1000);
+			runs(function () {
+				this.pgStore.length(this.callback1);
+			});
+			waits(1000);
+			runs(function () {
+				expect(this.callback1.mostRecentCall.args[1]).toEqual(1);
+			});
+		});
 	});
 	
 	describe('all function', function () {
@@ -241,6 +354,29 @@ describe('connect-pg', function () {
 				expect(this.callback1.mostRecentCall.args[1].length).toEqual(2);
 				expect(this.callback1.mostRecentCall.args[1]).toContain(this.sessID1);
 				expect(this.callback1.mostRecentCall.args[1]).toContain(this.sessID2);
+			});
+		});
+		
+		it('should not list any expired sessions', function () {
+			var Date1 = new Date;
+			Date1.setDate(Date1.getDate() + 1);
+			this.sessData1['cookie'] = {'expires': Date1};
+			var Date2 = new Date;
+			Date2.setDate(Date2.getDate() - 1);
+			this.sessData2['cookie'] = {'expires': Date2};
+			this.pgStore.set(this.sessID1, this.sessData1);
+			waits(1000);
+			runs(function () {
+				this.pgStore.set(this.sessID2, this.sessData2);				
+			});
+			waits(1000);
+			runs(function () {
+				this.pgStore.all(this.callback1);
+			});
+			waits(1000);
+			runs(function () {
+				expect(this.callback1.mostRecentCall.args[1].length).toEqual(1);
+				expect(this.callback1.mostRecentCall.args[1]).toContain(this.sessID1);
 			});
 		});
 	});

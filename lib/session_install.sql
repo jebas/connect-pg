@@ -6,6 +6,8 @@ create table connect_session (
 	expiration timestamp with time zone default now() + interval '1 day'
 );
 
+create index sess_expiration on connect_session (expiration);
+
 create or replace function set_session_data(
 	sessid text, 
 	sessdata text, 
@@ -74,7 +76,7 @@ $$ language plpgsql;
 create or replace function all_session_ids()
 returns setof text as $$
 	begin
-		return query select sess_id from connect_session;
+		return query select sess_id from connect_session where expiration > now() or expiration isnull;
 		return;
 	end;
 $$ language plpgsql;

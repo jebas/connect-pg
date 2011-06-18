@@ -3,7 +3,7 @@
 -- If this were an MCV setup the database is treated as the model.
 
 begin;
-select plan(24);
+select plan(26);
 
 -- table tests
 select has_table('connect_session', 'There should be a session table.');
@@ -18,6 +18,7 @@ select col_type_is('connect_session', 'sess_data', 'text', 'Session data is text
 select has_column('connect_session', 'expiration', 'Needs a time limit on the session.');
 select col_type_is('connect_session', 'expiration', 'timestamp with time zone', 'expiration needs to be a timestamp.');
 select col_has_default('connect_session', 'expiration', 'Needs a default of + one day.');
+select has_index('connect_session', 'sess_expiration', array['expiration'], 'Needs an index for the expiration column.');
 
 -- set function tests
 select has_function('set_session_data', array['text', 'text', 'timestamp with time zone'], 'Needs a set session data function.');
@@ -89,6 +90,14 @@ select set_session_data('flintstone', 'fred', null);
 select set_session_data('rubble', 'barney', null);
 select set_session_data('slade', 'mister', null);
 select results_eq('select all_session_ids()', 'session_ids', 'It should return all ids.');
+
+-- test all returns
+prepare good_session_ids as values ('flintstone'), ('rubble');
+select clear_sessions();
+select set_session_data('flintstone', 'fred', null);
+select set_session_data('rubble', 'barney', now() + interval '1 day');
+select set_session_data('slade', 'mister', now() - interval '1 day');
+select results_eq('select all_session_ids()', 'good_session_ids', 'It should not return expired ids.');
 
 select * from finish();
 rollback;
