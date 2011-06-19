@@ -3,7 +3,7 @@
 -- If this were an MCV setup the database is treated as the model.
 
 begin;
-select plan(26);
+select plan(31);
 
 -- table tests
 select has_table('connect_session', 'There should be a session table.');
@@ -80,6 +80,13 @@ select set_session_data('flintstone', 'fred', null);
 select set_session_data('rubble', 'barney', null);
 select results_eq('select count_sessions()', 'values (2)', 'This should equal the total number of records.');
 
+-- count does not include expired records.
+select clear_sessions();
+select set_session_data('flintstone', 'fred', null);
+select set_session_data('rubble', 'barney', now() + interval '1 day');
+select set_session_data('slade', 'mister', now() - interval '1 day');
+select results_eq('select count_sessions()', 'values (2)', 'This should equal the total number of records.');
+
 -- all function tests.
 select has_function('all_session_ids', 'Needs a listing of all session ids.');
 
@@ -98,6 +105,27 @@ select set_session_data('flintstone', 'fred', null);
 select set_session_data('rubble', 'barney', now() + interval '1 day');
 select set_session_data('slade', 'mister', now() - interval '1 day');
 select results_eq('select all_session_ids()', 'good_session_ids', 'It should not return expired ids.');
+
+-- remove_expired function tests.
+select has_function('remove_expired', 'Needs a function to delete expired records.');
+
+-- remove_expired trigger
+select trigger_is('connect_session', 'delete_expired_trig', 'remove_expired', 'clean up trigger should be called.');
+
+-- test remove_expired_trig to delete the old messages.
+select clear_sessions();
+select set_session_data('flintstone', 'fred', null);
+select set_session_data('rubble', 'barney', now() + interval '1 day');
+select set_session_data('slade', 'mister', now() - interval '1 day');
+select results_eq('select sess_id from connect_session', 'good_session_ids', 'It should delete expired sessions.');
+
+-- test should remove items after an update.
+select clear_sessions();
+select set_session_data('flintstone', 'fred', null);
+select set_session_data('rubble', 'barney', now() + interval '1 day');
+select set_session_data('slade', 'mister', now() + interval '1 day');
+select set_session_data('slade', 'mister', now() - interval '1 day');
+select results_eq('select sess_id from connect_session', 'good_session_ids', 'It should delete expired sessions after update.');
 
 select * from finish();
 rollback;

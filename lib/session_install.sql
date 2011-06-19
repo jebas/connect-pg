@@ -68,7 +68,7 @@ returns int as $$
 	declare
 		thecount int := 0;
 	begin
-		select count(*) into thecount from connect_session;
+		select count(*) into thecount from connect_session where expiration > now() or expiration isnull;
 		return thecount;
 	end;
 $$ language plpgsql;
@@ -80,3 +80,16 @@ returns setof text as $$
 		return;
 	end;
 $$ language plpgsql;
+
+create or replace function remove_expired()
+returns trigger as $$
+	begin
+		delete from connect_session where expiration < now();
+		return null;
+	end;
+$$ language plpgsql;
+
+create trigger delete_expired_trig
+	after insert or update
+	on connect_session
+	execute procedure remove_expired();
