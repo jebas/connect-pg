@@ -103,6 +103,25 @@ describe('connect-pg', function () {
 				pgStore.set(sessID1, sessData1);
 			}).not.toThrow();
 		});
+		
+		it('should keep cookie.expire and expiration the same', function () {
+			sessID1 = this.sessID1;
+			var theDate = new Date;
+			theDate.setDate(theDate.getDate() + 1);
+			this.sessData1['cookie'] = {'expires': theDate};
+			this.pgStore.set(this.sessID1, this.sessData1, this.callback1);
+			waitsFor(this.callback1Called, 'Waiting for callback', 10000);
+			runs(function () {
+				pg.connect(this.options.pgConnect, function (err, client) {
+					client.query('select expiration from web.session where sess_id = $1',
+							[sessID1,],
+							function (err, result) {
+								pgDate = new Date(result.rows[0].expiration);
+								expect(theDate).toEqual(pgDate);
+					});
+				});
+			});
+		});
 	});
 	
 	describe('get function', function () {
