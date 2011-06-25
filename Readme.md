@@ -45,16 +45,10 @@ and the second is to add the tables to the PostgreSQL database.
 	definer.  This will allow you to create another role that only has execute permissions 
 	for the functions.  
 	
-	`
-	grant execute on function web.set_session_data(text, text, timestamp with time zone) to scriptrole;
 	
-	grant execute on function web.get_session_data(text) to scriptrole;
-	
-	grant execute on function web.destroy_session(text) to scriptrole;
-	
-	grant execute on function web.clear_sessions() to scriptrole;
-	
-	grant execute on function web.count_sessions() to scriptrole;
-	
-	grant execute on function web.all_session_ids() to scriptrole;
-	`
+	`grant execute on function web.set_session_data(text, text, timestamp with time zone) to scriptrole;`
+	`grant execute on function web.get_session_data(text) to scriptrole;`
+	`grant execute on function web.destroy_session(text) to scriptrole;`
+	`grant execute on function web.clear_sessions() to scriptrole;`
+	`grant execute on function web.count_sessions() to scriptrole;`
+	`grant execute on function web.all_session_ids() to scriptrole;`
