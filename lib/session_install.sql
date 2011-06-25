@@ -34,7 +34,7 @@ returns void as $$
 			end;
 		end loop;
 	end;
-$$ language plpgsql;
+$$ language plpgsql security definer;
 
 create or replace function web.get_session_data(sessid text)
 returns text as $$
@@ -47,7 +47,7 @@ returns text as $$
 				and (expiration > now() or expiration isnull);
 		return sessdata;
 	end;
-$$ language plpgsql;
+$$ language plpgsql security definer;
 
 create or replace function web.destroy_session(sessid text)
 returns void as $$
@@ -55,7 +55,7 @@ returns void as $$
 		delete from web.session where sess_id = sessid;
 		return;
 	end;
-$$ language plpgsql;
+$$ language plpgsql security definer;
 
 create or replace function web.clear_sessions()
 returns void as $$
@@ -63,7 +63,7 @@ returns void as $$
 		delete from web.session;
 		return;
 	end;
-$$ language plpgsql;
+$$ language plpgsql security definer;
 
 create or replace function web.count_sessions()
 returns int as $$
@@ -73,7 +73,7 @@ returns int as $$
 		select count(*) into thecount from web.session where expiration > now() or expiration isnull;
 		return thecount;
 	end;
-$$ language plpgsql;
+$$ language plpgsql security definer;
 
 create or replace function web.all_session_ids()
 returns setof text as $$
@@ -81,7 +81,7 @@ returns setof text as $$
 		return query select sess_id from web.session where expiration > now() or expiration isnull;
 		return;
 	end;
-$$ language plpgsql;
+$$ language plpgsql security definer;
 
 create or replace function web.remove_expired()
 returns trigger as $$
@@ -89,7 +89,7 @@ returns trigger as $$
 		delete from web.session where expiration < now();
 		return null;
 	end;
-$$ language plpgsql;
+$$ language plpgsql security definer;
 
 create trigger delete_expired_trig
 	after insert or update
