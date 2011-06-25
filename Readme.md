@@ -4,8 +4,6 @@ Connect-pg is a middleware session storage for the connect
 framework using PostgreSQL.  Why?  Because sometimes you need a 
 relational database handling your data.  
 
-***
-
 ## Requirements
 
 * **Production**
@@ -16,8 +14,6 @@ relational database handling your data.
 	* *[jasmine-node](https://github.com/mhevery/jasmine-node)* The BDD style testing framework for JavaScript.  
 	* *[pgtap](http://pgtap.org)* TAP style testing framework for PostgreSQL databases.  
 	
-***
-
 ## Installation 
 
 Installation is done in two steps.  The first is to install the JavaScript library, 
