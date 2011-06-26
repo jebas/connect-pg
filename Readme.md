@@ -65,9 +65,9 @@ use connect-pg.
 
 2. Next establish your database connection string.
 
-	`var connectStr = "tcp://thetester:password@localhost/pgstore";
+	`var connectStr = "tcp://thetester:password@localhost/pgstore";`
 	
-	`var storeOptions = {'pgConnect': connectStr};
+	`var storeOptions = {'pgConnect': connectStr};`
 	
 3. Inform the session manager to use connect-pg.  
 
