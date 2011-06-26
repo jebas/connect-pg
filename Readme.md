@@ -53,3 +53,28 @@ and the second is to add the tables to the PostgreSQL database.
 	`grant execute on function web.count_sessions() to scriptrole;`
 	
 	`grant execute on function web.all_session_ids() to scriptrole;`
+	
+## Usage
+
+Using connect-pg can be done in three easy steps.  
+
+1. After the database has been created, the next step is to let your application is going to 
+use connect-pg.  
+
+	`var PGStore = require('connect-pg');`
+
+2. Next establish your database connection string.
+
+	`var connectStr = "tcp://thetester:password@localhost/pgstore";
+	
+	`var storeOptions = {'pgConnect': connectStr};
+	
+3. Inform the session manager to use connect-pg.  
+
+	* **In connect:**
+	
+		`connect.session({ store: new PGStore(storeOptions), secret: 'keyboard cat'});`
+		
+	* **In Express:**
+	
+		`app.use(express.session({store: new PGStore(storeOptions), secret: 'keyboard cat'}));`
