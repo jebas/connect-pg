@@ -1,0 +1,25 @@
+{
+  "author": "Jeff Baskin <jeff.l.baskin@gmail.com>",
+  "name": "connect-pg",
+  "description": "Connect storage using PostgreSQL.",
+  "version": "1.0.0",
+  "homepage": "https://github.com/jebas/connect-pg",
+  "repository": {
+    "type": "git",
+    "url": "ssh://git@github.com/jebas/connect-pg.git"
+  },
+  "main": "index",
+  "scripts": {
+    "test": "jasmine-node spec"
+  },
+  "engines": {
+    "node": ">= 0.4.5"
+  },
+  "dependencies": {
+  	"connect": ">= 1.5.0",
+  	"pg": ">= 0.5.0"
+  },
+  "devDependencies": {
+  	"jasmine-node": ">= 1.0.5"
+  }
+}

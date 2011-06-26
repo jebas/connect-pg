@@ -78,6 +78,20 @@ use connect-pg.
 	* **In Express:**
 	
 		`app.use(express.session({store: new PGStore(storeOptions), secret: 'keyboard cat'}));`
+		
+## Development 
+
+connect-pg use two testing systems: one for the database, and one for the JavaScript.  
+
+In a traditional model-controller-view (MCV) setup, the database would be considered 
+the model and all access to the database is controlled through functions inside the 
+database.  pgtap is used to test these functions.  Installation of pgtap is described on
+their website.  
+
+The rest of connect-pg could be considered the controller, and it was written in 
+JavaScript.  `jasmine-node spec` is all that is needed to run these tests.  
+
+There is no view to setup.  
 
 ## LICENSE
 
