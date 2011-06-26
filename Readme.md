@@ -78,3 +78,7 @@ use connect-pg.
 	* **In Express:**
 	
 		`app.use(express.session({store: new PGStore(storeOptions), secret: 'keyboard cat'}));`
+
+## LICENSE
+
+This software is using the [MIT](LICENSE) to match the connect license.
