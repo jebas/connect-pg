@@ -2,6 +2,7 @@
   "author": "Jeff Baskin <jeff.l.baskin@gmail.com>",
   "name": "connect-pg",
   "description": "Connect storage using PostgreSQL.",
+  "keywords": ["pg", "connect", "postgres", "postgresql", "express"],
   "version": "1.0.0",
   "homepage": "https://github.com/jebas/connect-pg",
   "repository": {
