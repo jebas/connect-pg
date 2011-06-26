@@ -95,4 +95,4 @@ There is no view to setup.
 
 ## LICENSE
 
-This software is using the [MIT](./LICENSE) to match the connect license.
+This software is using the [MIT](/LICENSE) to match the connect license.
