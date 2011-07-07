@@ -2,8 +2,20 @@
 
 -- If this were an MCV setup the database is treated as the model.
 
+\set ECHO
+\set QUIET 1
+
+\pset format unaligned
+\pset tuples_only true
+\pset pager
+
+\set ON_ERROR_ROLLBACK 1
+\set ON_ERROR_STOP true
+\set QUIET 1
+
 begin;
--- \i pgtap.sql
+
+\i pgtap.sql
 
 select plan(32);
 
