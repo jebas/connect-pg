@@ -1,3 +1,67 @@
+create or replace function test_web_schema()
+returns setof text
+as $$
+	begin
+		return next has_schema('web', 'There should be a web sessions schema.');
+	end;
+$$ language plpgsql;
+
+create or replace function test_web_session_table()
+returns setof text
+as $$
+	begin
+		return next has_table('web', 'session', 'There should be a session table.');
+	end;
+$$ language plpgsql;
+
+create or replace function correct_web()
+returns setof text
+as $$
+	declare
+		error_holder		text;
+	begin
+		prepare db_test (text) as 
+			select 
+				runtests
+			from
+				runtests($1)
+			where
+				runtests ~* '^not ok';
+		-- web schema
+		execute db_test('test_web_schema');
+		if found then
+			create schema web;
+			return next 'Created a schema';
+		end if;
+				
+		/*
+		-- Schema
+		select 
+			runtests into error_holder
+		from
+			runtests('test_web_schema')
+		where
+			runtests ~* '^not ok';
+		if found then
+			create schema web;
+			return next 'Created a schema';
+		end if;
+		-- session table
+		select 
+			runtests into error_holder
+		from
+			runtests('test_web_session_table')
+		where
+			runtests ~* '^not ok';
+		if found then
+			create table web.session();
+			return next 'Created the session table.';
+		end if;
+		*/
+	end;
+$$ language plpgsql;
+
+/*
 -- This installs the table and functions for connect-pg.
 
 create schema web;
@@ -95,3 +159,4 @@ create trigger delete_expired_trig
 	after insert or update
 	on web.session
 	execute procedure web.remove_expired();
+*/
