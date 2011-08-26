@@ -20,22 +20,22 @@ begin;
 select plan(32);
 
 -- schema tests
-select has_schema('web', 'There should be a web sessions schema.');
+--select has_schema('web', 'There should be a web sessions schema.');
 
 -- table tests
-select has_table('web', 'session', 'There should be a session table.');
+--select has_table('web', 'session', 'There should be a session table.');
 
-select has_column('web', 'session', 'sess_id', 'Needs to have a session id column.');
-select col_type_is('web', 'session', 'sess_id', 'text', 'Session id is a string.');
-select col_is_pk('web', 'session', 'sess_id', 'The session id is the primary key');
+--select has_column('web', 'session', 'sess_id', 'Needs to have a session id column.');
+--select col_type_is('web', 'session', 'sess_id', 'text', 'Session id is a string.');
+--select col_is_pk('web', 'session', 'sess_id', 'The session id is the primary key');
 
-select has_column('web', 'session', 'sess_data', 'Needs to store the session data.');
-select col_type_is('web', 'session', 'sess_data', 'text', 'Session data is text.');
+--select has_column('web', 'session', 'sess_data', 'Needs to store the session data.');
+--select col_type_is('web', 'session', 'sess_data', 'text', 'Session data is text.');
 
-select has_column('web', 'session', 'expiration', 'Needs a time limit on the session.');
-select col_type_is('web', 'session', 'expiration', 'timestamp with time zone', 'expiration needs to be a timestamp.');
-select col_has_default('web', 'session', 'expiration', 'Needs a default of + one day.');
-select has_index('web', 'session', 'expire_idx', array['expiration'], 'Needs an index for the expiration column.');
+--select has_column('web', 'session', 'expiration', 'Needs a time limit on the session.');
+--select col_type_is('web', 'session', 'expiration', 'timestamp with time zone', 'expiration needs to be a timestamp.');
+--select col_has_default('web', 'session', 'expiration', 'Needs a default of + one day.');
+--select has_index('web', 'session', 'expire_idx', array['expiration'], 'Needs an index for the expiration column.');
 
 -- set function tests
 select has_function('web', 'set_session_data', array['text', 'text', 'timestamp with time zone'], 'Needs a set session data function.');
