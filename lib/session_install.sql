@@ -326,6 +326,67 @@ as $$
 	end;
 $$ language plpgsql;
 
+create or replace function test_web_trigger_deleteexpired_exists()
+returns setof text
+as $$
+	begin 
+		return next trigger_is(
+			'web',
+			'session',
+			'delete_expired_trig',
+			'web',
+			'remove_expired',
+			'Needs a delete expired trigger.');
+	end;
+$$ language plpgsql;
+
+create or replace function test_web_function_deleteexpired_exists()
+returns setof text
+as $$
+	begin 
+		return next has_function('web', 'remove_expired', 'Needs a function to delete expired records.');
+		return next is_definer('web', 'remove_expired', 'Delete expired should have definer security.');
+		return next function_returns('web', 'remove_expired', 'trigger', 'Delete expired data should return a trigger.');
+	end;
+$$ language plpgsql;
+
+create or replace function test_web_function_deleteexpired_after_insert()
+returns setof text
+as $$
+	begin 
+		perform web.set_session_data('web-session-2', 'web-2-data', now() + interval '1 day');
+		perform web.set_session_data('web-session-3', 'web-3-data', now() - interval '1 day');
+		perform web.set_session_data('web-session-4', 'web-4-data', now() + interval '1 day');
+		return next results_eq(
+			'select cast(count(*) as int) from web.session',
+			'values (3)',
+			'Expired sessions should be deleted after insert.');
+	end;
+$$ language plpgsql;
+
+create or replace function test_web_function_deleteexpired_after_update()
+returns setof text
+as $$
+	begin 
+		perform web.set_session_data('web-session-2', 'web-2-data', now() + interval '1 day');
+		perform web.set_session_data('web-session-3', 'web-3-data', now() + interval '1 day');
+		perform web.set_session_data('web-session-4', 'web-4-data', now() + interval '1 day');
+		perform web.set_session_data('web-session-3', 'web-3-data', now() - interval '1 day');
+		return next results_eq(
+			'select cast(count(*) as int) from web.session',
+			'values (3)',
+			'Expired sessions should be deleted after insert.');
+	end;
+$$ language plpgsql;
+
+create or replace function test_web_user_exists()
+returns setof text
+as $$
+	begin 
+		return next has_user('nodepg', 'Needs to have the nodepg user.');
+	end;
+$$ language plpgsql;
+
 create or replace function failed_test( thetest text )
 returns boolean
 as $$
@@ -408,7 +469,8 @@ as $funct$
 					where expiration > now() 
 						or expiration is null;
 			end;
-		$$ language plpgsql security definer;
+		$$ language plpgsql security definer
+		set search_path = web, pg_temp;
 		
 		create or replace function web.set_session_data(
 			sessid text, 
@@ -434,7 +496,8 @@ as $funct$
 					end;
 				end loop;
 			end;
-		$$ language plpgsql security definer;
+		$$ language plpgsql security definer
+		set search_path = web, pg_temp;
 		return next 'Created function web.set_session_data';
 		
 		create or replace function web.destroy_session(sessid text)
@@ -442,7 +505,8 @@ as $funct$
 			begin
 				delete from web.session where sess_id = sessid;
 			end;
-		$$ language plpgsql security definer;
+		$$ language plpgsql security definer
+		set search_path = web, pg_temp;
 		return next 'Created function web.destroy_session.';
 		
 		create or replace function web.get_session_data(sessid text)
@@ -452,7 +516,8 @@ as $funct$
 					from web.valid_sessions()
 					where sess_id = sessid;
 			end;
-		$$ language plpgsql security definer;
+		$$ language plpgsql security definer
+		set search_path = web, pg_temp;
 		return next 'Created function web.get_session.';
 		
 		create or replace function web.clear_sessions()
@@ -460,7 +525,8 @@ as $funct$
 			begin 
 				delete from web.session;
 			end;
-		$$ language plpgsql security definer;
+		$$ language plpgsql security definer
+		set search_path = web, pg_temp;		
 		return next 'Created function web.clear_sessions.';
 
 		create or replace function web.count_sessions()
@@ -472,7 +538,8 @@ as $funct$
 					from web.valid_sessions();
 				return thecount;
 			end;
-		$$ language plpgsql security definer;
+		$$ language plpgsql security definer
+		set search_path = web, pg_temp;
 		return next 'Created function web.count_sessions.';
 
 		create or replace function web.all_session_ids()
@@ -481,22 +548,58 @@ as $funct$
 				return query select sess_id
 					from web.valid_sessions();
 			end;
-		$$ language plpgsql security definer;
+		$$ language plpgsql security definer
+		set search_path = web, pg_temp;
 		return next 'Created function web.all_session_ids.';
+		
+		drop trigger if exists delete_expired_trig on web.session;
+
+		create or replace function web.remove_expired()
+		returns trigger as $$
+			begin
+				delete from web.session where expiration < now();
+				return null;
+			end;
+		$$ language plpgsql security definer
+		set search_path = web, pg_temp;
+		return next 'Created trigger function web.delete_expired.';
+		
+		create trigger delete_expired_trig
+			after insert or update
+			on web.session
+			execute procedure web.remove_expired();
+		return next 'Created trigger delete_expired on web.session.';
+		
+		if failed_test('test_web_user_exists') then 
+			create user nodepg with password 'password';
+			return next 'Created user nodepg';
+		end if;
+		
+		revoke all on function 
+			web.valid_sessions(),
+			web.set_session_data(
+				sessid text, 
+				sessdata text, 
+				expire timestamp with time zone),
+			web.destroy_session(sessid text),
+			web.get_session_data(sessid text),
+			web.clear_sessions(),
+			web.count_sessions(),
+			web.all_session_ids(),
+			web.remove_expired()
+		from public;
+		
+		grant execute on function 
+			web.set_session_data(
+				sessid text, 
+				sessdata text, 
+				expire timestamp with time zone),
+			web.destroy_session(sessid text),
+			web.get_session_data(sessid text),
+			web.clear_sessions(),
+			web.count_sessions(),
+			web.all_session_ids()
+		to nodepg;
+		return next 'Permissions set.';
 	end;
 $funct$ language plpgsql;
-
-/*
-create or replace function web.remove_expired()
-returns trigger as $$
-	begin
-		delete from web.session where expiration < now();
-		return null;
-	end;
-$$ language plpgsql security definer;
-
-create trigger delete_expired_trig
-	after insert or update
-	on web.session
-	execute procedure web.remove_expired();
-*/

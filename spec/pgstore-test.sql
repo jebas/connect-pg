@@ -124,25 +124,25 @@ select plan(32);
 --select results_eq('select web.all_session_ids()', 'good_session_ids', 'It should not return expired ids.');
 
 -- remove_expired function tests.
-select has_function('web', 'remove_expired', 'Needs a function to delete expired records.');
+--select has_function('web', 'remove_expired', 'Needs a function to delete expired records.');
 
 -- remove_expired trigger
-select trigger_is('web', 'session', 'delete_expired_trig', 'web', 'remove_expired', 'clean up trigger should be called.');
+--select trigger_is('web', 'session', 'delete_expired_trig', 'web', 'remove_expired', 'clean up trigger should be called.');
 
 -- test remove_expired_trig to delete the old messages.
-select web.clear_sessions();
-select web.set_session_data('flintstone', 'fred', null);
-select web.set_session_data('rubble', 'barney', now() + interval '1 day');
-select web.set_session_data('slade', 'mister', now() - interval '1 day');
-select results_eq('select sess_id from web.session', 'good_session_ids', 'It should delete expired sessions.');
+--select web.clear_sessions();
+--select web.set_session_data('flintstone', 'fred', null);
+--select web.set_session_data('rubble', 'barney', now() + interval '1 day');
+--select web.set_session_data('slade', 'mister', now() - interval '1 day');
+--select results_eq('select sess_id from web.session', 'good_session_ids', 'It should delete expired sessions.');
 
 -- test should remove items after an update.
-select web.clear_sessions();
-select web.set_session_data('flintstone', 'fred', null);
-select web.set_session_data('rubble', 'barney', now() + interval '1 day');
-select web.set_session_data('slade', 'mister', now() + interval '1 day');
-select web.set_session_data('slade', 'mister', now() - interval '1 day');
-select results_eq('select sess_id from web.session', 'good_session_ids', 'It should delete expired sessions after update.');
+--select web.clear_sessions();
+--select web.set_session_data('flintstone', 'fred', null);
+--select web.set_session_data('rubble', 'barney', now() + interval '1 day');
+--select web.set_session_data('slade', 'mister', now() + interval '1 day');
+--select web.set_session_data('slade', 'mister', now() - interval '1 day');
+--select results_eq('select sess_id from web.session', 'good_session_ids', 'It should delete expired sessions after update.');
 
 select * from finish();
 rollback;

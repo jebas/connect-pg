@@ -1,58 +1,59 @@
 # Connect PostgreSQL
 
-Connect-pg is a middleware session storage for the connect 
-framework using PostgreSQL.  Why?  Because sometimes you need a 
-relational database handling your data.  
+Connect-pg is a middleware session storage for the connect framework using 
+PostgreSQL.  Why?  Because sometimes you need a relational database 
+handling your data.  
 
 ## Requirements
 
 * **Production**
 	* *[connect](https://github.com/senchalabs/connect) 1.5.0 or later* The HTTP server framework used by Express.
 	* *[pg](https://github.com/brianc/node-postgres) 0.50 or later* The node.js client for PostgreSQL.  
-	* *[PostgreSQL](http://www.postgresql.org) 8.4 or later* The database.
+	* *[PostgreSQL](http://www.postgresql.org) 9.0 or later* The database.
+	* *[pgtap](http://pgtap.org)* TAP style testing framework for PostgreSQL databases.  
 * **Development**
 	* *[jasmine-node](https://github.com/mhevery/jasmine-node)* The BDD style testing framework for JavaScript.  
-	* *[pgtap](http://pgtap.org)* TAP style testing framework for PostgreSQL databases.  
 	
 ## Installation 
 
-Installation is done in two steps.  The first is to install the JavaScript library, 
-and the second is to add the tables to the PostgreSQL database.  
+1. **Setup PostgreSQL to Use Passwords to Log In**
 
-1. **Install the JavaScript library**
+	Refer to PostgreSQL's manual for changing the pg_hba.conf file.  The 
+	database needs to be setup so that database users can log into the 
+	system using a password.  
 
-	*Standard Method:* npm install connect-pg (eventually)
-	
-	*Manual Method:* [Download](https://github.com/jebas/connect-pg) the files to your
-	server.  The only file your script needs access to is connect-pg.js found in the lib
-	directory.  
-	
-2. **Add the tables to your database**
+2. **Install pgTap into the Database**
 
-	In the lib directory, there is a file called session_install.sql.  Assuming that you
-	have already created a database, and that you have access to a user that has been 
-	granted the appropriate permissions (See the [PostgreSQL](http://www.postgresql.org/docs)
-	for instructions), all you need to do is execute session_install.sql inside the database.
+	[pgTap](http://pgtap.org) is a development tool that validates whether 
+	the database is functioning properly or not.  The same tests can also 
+	be used to determine what changes need to be made to the database 
+	in an installation or upgrade.  So it needs to be installed first.  The link 
+	to their website will provide instructions.  
+
+3. **Install the connect-pg library**
+
+	*Standard Method:* npm install connect-pg
 	
-	`psql -d pgstore -U postgres -f session_install.sql`
+	*Manual Method:* [Download](https://github.com/jebas/connect-pg) the 
+	files to your server.  The only file your script needs access to is 
+	connect-pg.js found in the lib directory.  
 	
-	If you are planning to use the same role/user in your JavaScript application, you are 
-	done with the installation.  However, all of the functions were created with security
-	definer.  This will allow you to create another role that only has execute permissions 
-	for the functions.  
+4. **Install the Testing, Upgrading, and Installation Functions**
+
+	As the superuser for the database, install the functions that test, 
+	install, and upgrade the connect-pg database. As shown in the 
+	following example:
 	
-	
-	`grant execute on function web.set_session_data(text, text, timestamp with time zone) to scriptrole;`
-	
-	`grant execute on function web.get_session_data(text) to scriptrole;`
-	
-	`grant execute on function web.destroy_session(text) to scriptrole;`
-	
-	`grant execute on function web.clear_sessions() to scriptrole;`
-	
-	`grant execute on function web.count_sessions() to scriptrole;`
-	
-	`grant execute on function web.all_session_ids() to scriptrole;`
+	`psql -d {database name} -U postgres -f {path to file}/session_install.sql`
+
+5. **Run the Database Correction Function**
+
+	As the database's superuser, run the database correction function.  
+	This will install the tables and functions into a new database, or it will 
+	update an existing database to add the new features.  The following is 
+	an example of the command.  
+
+	`psql -d {database name} -U postgres -c 'select correct_web()'`
 	
 ## Usage
 
