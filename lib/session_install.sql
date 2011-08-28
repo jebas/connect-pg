@@ -600,6 +600,9 @@ as $funct$
 			web.count_sessions(),
 			web.all_session_ids()
 		to nodepg;
+		
+		grant usage on schema web to nodepg;
+		
 		return next 'Permissions set.';
 	end;
 $funct$ language plpgsql;
