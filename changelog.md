@@ -5,6 +5,7 @@
 * Fixed the intermittant JavaScript test faliures.
 * Updated the readme file.
 * Added the Change Log file.  
+* Created the nodepg PostgreSQL user.
 
 # Version 1.0.0
 
