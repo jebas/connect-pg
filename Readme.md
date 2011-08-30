@@ -13,7 +13,16 @@ handling your data.
 	* *[pgtap](http://pgtap.org)* TAP style testing framework for PostgreSQL databases.  
 * **Development**
 	* *[jasmine-node](https://github.com/mhevery/jasmine-node)* The BDD style testing framework for JavaScript.  
-	
+
+##Feature List
+
+* Create or update session information.
+* Retreive information stored for the session.
+* Delete the information for a session.
+* Count the total number of active sessions.
+* Delete all session information.
+* Automatically delete session information that has expired.
+
 ## Installation 
 
 1. **Setup PostgreSQL to Use Passwords to Log In**
@@ -55,7 +64,22 @@ handling your data.
 
 	`psql -d {database name} -U postgres -c 'select correct_web()'`
 	
+6. **Change the nodepg user's password**
+
+	As part of the database setup, the correct_web function will confirm 
+	or create a PostgreSQL user called nodepg.  For security reasons, this 
+	user is only given enough rights to operate the connect-pg functions, 
+	and no more.  Since the default password for this user is 'password', 
+	you will want to change the password for this user to something that 
+	is more secure.  Example as follow:
+	
+	`psql -d {database name} -U postgres -c 'alter user nodepg with password {something secret}'`
+
 ## Usage
+
+
+
+
 
 Using connect-pg can be done in three easy steps.  
 
