@@ -82,6 +82,7 @@ connection user, and setting permissions.  To use connect-pg in your
 Express of Connection application, you will need to create a function 
 whose callback will contain a pg client.  The following is an example:
 
+<pre><code>
 	var pg = require('pg');
 
 	function pgConnect (callback) {
@@ -96,6 +97,7 @@ whose callback will contain a pg client.  The following is an example:
 			}
 		);
 	};
+</code></pre>
 
 Obviously, you would change the pg connection string to something 
 appropriate for your system.  
@@ -121,17 +123,17 @@ Express is used for the controller.
 
 If you wish to contribute, please follow these guidelines:
 
-	* Only pgTap, installation/upgrade, and functions supporting them 
-	are placed in the root of the database.
-	* Everything else should be placed into a given schema.  
-	* Tests functions should start with 'test_{schema name}_' so they 
-	don't conflict with other modules.
-	* Nodepg should only be given the minimum permissions to make 
-	the module run.
-	* Use pgTap tests to create an installation/upgrade function.  Use 
-	connect-pg's correct_web() as an example.
-	* Though you don't have to use Jasmine for every module, some 
-	automated testing method is preferred.  
+* Only pgTap, installation/upgrade, and functions supporting them 
+are placed in the root of the database.
+* Everything else should be placed into a given schema.  
+* Tests functions should start with 'test_{schema name}_' so they 
+don't conflict with other modules.
+* Nodepg should only be given the minimum permissions to make 
+the module run.
+* Use pgTap tests to create an installation/upgrade function.  Use 
+connect-pg's correct_web() as an example.
+* Though you don't have to use Jasmine for every module, some 
+automated testing method is preferred.  
 
 ## LICENSE
 
