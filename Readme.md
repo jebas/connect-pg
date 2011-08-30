@@ -77,47 +77,63 @@ handling your data.
 
 ## Usage
 
+1. The database installation goes through the process of creating the 
+connection user, and setting permissions.  To use connect-pg in your 
+Express of Connection application, you will need to create a function 
+whose callback will contain a pg client.  The following is an example:
 
+	var pg = require('pg');
 
+	function pgConnect (callback) {
+		pg.connect('tcp://nodepg:password@localhost/pgstore',
+			function (err, client) {
+				if (err) {
+					console.log(JSON.stringify(err));
+				}
+				if (client) {
+					callback(client);
+				}
+			}
+		);
+	};
 
+Obviously, you would change the pg connection string to something 
+appropriate for your system.  
 
-Using connect-pg can be done in three easy steps.  
-
-1. After the database has been created, the next step is to let your application is going to 
-use connect-pg.  
-
-	`var PGStore = require('connect-pg');`
-
-2. Next establish your database connection string.
-
-	`var connectStr = "tcp://thetester:password@localhost/pgstore";`
-	
-	`var storeOptions = {'pgConnect': connectStr};`
-	
-3. Inform the session manager to use connect-pg.  
+2. Setup the session software to use the connect-pg for storage.  
 
 	* **In connect:**
 	
-		`connect.session({ store: new PGStore(storeOptions), secret: 'keyboard cat'});`
+		`connect.session({ store: new PGStore(pgConnect), 
+		secret: 'keyboard cat'});`
 		
 	* **In Express:**
 	
-		`app.use(express.session({store: new PGStore(storeOptions), secret: 'keyboard cat'}));`
-		
+		`app.use(express.session({store: new PGStore(pgConnect), 
+		secret: 'keyboard cat'}));`
+
 ## Development 
 
-connect-pg use two testing systems: one for the database, and one for the JavaScript.  
+Connect-pg is the first module in a series that is being developed for 
+node.js and Express.  Using the Model, View, Controller (MVC) analogy, 
+PostgreSQL is used for the model, templates are used for the view, and 
+Express is used for the controller.  
 
-In a traditional model-controller-view (MCV) setup, the database would be considered 
-the model and all access to the database is controlled through functions inside the 
-database.  pgtap is used to test these functions.  Installation of pgtap is described on
-their website.  
+If you wish to contribute, please follow these guidelines:
 
-The rest of connect-pg could be considered the controller, and it was written in 
-JavaScript.  `jasmine-node spec` is all that is needed to run these tests.  
-
-There is no view to setup.  
+	* Only pgTap, installation/upgrade, and functions supporting them 
+	are placed in the root of the database.
+	* Everything else should be placed into a given schema.  
+	* Tests functions should start with 'test_{schema name}_' so they 
+	don't conflict with other modules.
+	* Nodepg should only be given the minimum permissions to make 
+	the module run.
+	* Use pgTap tests to create an installation/upgrade function.  Use 
+	connect-pg's correct_web() as an example.
+	* Though you don't have to use Jasmine for every module, some 
+	automated testing method is preferred.  
 
 ## LICENSE
 
-This software is using the [MIT](./connect-pg/blob/master/LICENSE) to match the connect license.
+This software is using the [MIT](./connect-pg/blob/master/LICENSE) to match 
+the connect license.

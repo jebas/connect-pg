@@ -263,69 +263,6 @@ as $$
 	end;
 $$ language plpgsql;
 
-create or replace function test_web_function_allids_exists()
-returns setof text
-as $$
-	begin 
-		return next has_function('web', 'all_session_ids', 'Needs a listing of all session ids.');
-		return next is_definer('web', 'all_session_ids', 'All ids should have definer security.');
-		return next function_returns('web', 'all_session_ids', 'setof text', 'All ids data should not return anything.');
-	end;
-$$ language plpgsql;
-
-create or replace function test_web_function_allids_returns_ids()
-returns setof text
-as $$
-	begin 
-		perform web.set_session_data('web-session-2', 'web-2-data', now() + interval '1 day');
-		perform web.set_session_data('web-session-3', 'web-3-data', now() + interval '1 day');
-		perform web.set_session_data('web-session-4', 'web-4-data', now() + interval '1 day');
-		return next results_eq(
-			'select web.all_session_ids()',
-			$a$values 
-				('web-session-1'),
-				('web-session-2'),
-				('web-session-3'),
-				('web-session-4')$a$,
-			'All ids should return all of the session ids.');
-	end;
-$$ language plpgsql;
-
-create or replace function test_web_function_allids_ignores_expired()
-returns setof text
-as $$
-	begin 
-		perform web.set_session_data('web-session-2', 'web-2-data', now() + interval '1 day');
-		perform web.set_session_data('web-session-3', 'web-3-data', now() - interval '1 day');
-		perform web.set_session_data('web-session-4', 'web-4-data', now() + interval '1 day');
-		return next results_eq(
-			'select web.all_session_ids()',
-			$a$values 
-				('web-session-1'),
-				('web-session-2'),
-				('web-session-4')$a$,
-			'All ids should ignore expired ids.');
-	end;
-$$ language plpgsql;
-
-create or replace function test_web_function_allids_returns_null_expirations()
-returns setof text
-as $$
-	begin 
-		perform web.set_session_data('web-session-2', 'web-2-data', now() + interval '1 day');
-		perform web.set_session_data('web-session-3', 'web-3-data', null);
-		perform web.set_session_data('web-session-4', 'web-4-data', now() + interval '1 day');
-		return next results_eq(
-			'select web.all_session_ids()',
-			$a$values 
-				('web-session-1'),
-				('web-session-2'),
-				('web-session-3'),
-				('web-session-4')$a$,
-			'All ids should include null expirations.');
-	end;
-$$ language plpgsql;
-
 create or replace function test_web_trigger_deleteexpired_exists()
 returns setof text
 as $$
@@ -376,6 +313,14 @@ as $$
 			'select cast(count(*) as int) from web.session',
 			'values (3)',
 			'Expired sessions should be deleted after insert.');
+	end;
+$$ language plpgsql;
+
+create or replace function test_web_function_allids_is_removed()
+returns setof text
+as $$
+	begin
+		return next hasnt_function('web', 'all_session_ids', 'All ids is removed for security reasons.');
 	end;
 $$ language plpgsql;
 
@@ -462,6 +407,11 @@ as $funct$
 			return next 'Created expiration index.';
 		end if;
 		
+		if failed_test('test_web_function_allids_is_removed') then
+			drop function web.all_session_ids();
+			return next 'Removed all ids for security reasons.';
+		end if;
+		
 		create or replace function web.valid_sessions()
 		returns setof web.session as $$
 			begin
@@ -542,16 +492,6 @@ as $funct$
 		set search_path = web, pg_temp;
 		return next 'Created function web.count_sessions.';
 
-		create or replace function web.all_session_ids()
-		returns setof text as $$
-			begin
-				return query select sess_id
-					from web.valid_sessions();
-			end;
-		$$ language plpgsql security definer
-		set search_path = web, pg_temp;
-		return next 'Created function web.all_session_ids.';
-		
 		drop trigger if exists delete_expired_trig on web.session;
 
 		create or replace function web.remove_expired()
@@ -585,7 +525,6 @@ as $funct$
 			web.get_session_data(sessid text),
 			web.clear_sessions(),
 			web.count_sessions(),
-			web.all_session_ids(),
 			web.remove_expired()
 		from public;
 		
@@ -597,8 +536,7 @@ as $funct$
 			web.destroy_session(sessid text),
 			web.get_session_data(sessid text),
 			web.clear_sessions(),
-			web.count_sessions(),
-			web.all_session_ids()
+			web.count_sessions()
 		to nodepg;
 		
 		grant usage on schema web to nodepg;
