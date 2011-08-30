@@ -3,7 +3,7 @@
   "name": "connect-pg",
   "description": "Connect storage using PostgreSQL.",
   "keywords": ["pg", "connect", "postgres", "postgresql", "express"],
-  "version": "1.0.0",
+  "version": "1.1.0",
   "homepage": "https://github.com/jebas/connect-pg",
   "repository": {
     "type": "git",
