@@ -1,3 +1,7 @@
+# Version 1.1.1
+
+* Fixed a database installation issue.
+
 # Version 1.1.0
 
 * Automated the creation and upgrading of the databases.

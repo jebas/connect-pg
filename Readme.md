@@ -102,7 +102,11 @@ whose callback will contain a pg client.  The following is an example:
 Obviously, you would change the pg connection string to something 
 appropriate for your system.  
 
-2. Setup the session software to use the connect-pg for storage.  
+2. Include the requirement for connect-pg.
+
+	`var PGStore = require('connect-pg');`
+
+3. Setup the session software to use the connect-pg for storage.  
 
 	* **In connect:**
 	
@@ -134,6 +138,10 @@ the module run.
 connect-pg's correct_web() as an example.
 * Though you don't have to use Jasmine for every module, some 
 automated testing method is preferred.  
+* Be careful of using pgTAP's startup, setup, teardown, and shutdown 
+functions.  These run before and after the test function is run.  In 
+development this is fine, but it may cause the installation to call on 
+features that have not been installed yet.  
 
 ## LICENSE
 

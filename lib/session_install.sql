@@ -1,19 +1,3 @@
-create or replace function setup_web()
-returns setof text
-as $$
-	begin
-		perform web.set_session_data('web-session-1', 'web-1-data', now() + interval '1 day');
-	end;
-$$ language plpgsql;
-
-create or replace function teardown_web()
-returns setof text
-as $$
-	begin
-		perform web.clear_sessions();
-	end;
-$$ language plpgsql;
-
 create or replace function test_web_schema()
 returns setof text
 as $$
@@ -171,6 +155,7 @@ create or replace function test_web_function_getsessiondata_data()
 returns setof text
 as $$
 	begin 
+		perform web.set_session_data('web-session-1', 'web-1-data', now() + interval '1 day');
 		return next results_eq (
 			$a$select web.get_session_data('web-session-1')$a$,
 			$a$values ('web-1-data')$a$,
@@ -225,6 +210,7 @@ create or replace function test_web_function_countsessions_returns_count()
 returns setof text
 as $$
 	begin 
+		perform web.set_session_data('web-session-1', 'web-1-data', now() + interval '1 day');
 		perform web.set_session_data('web-session-2', 'web-2-data', now() + interval '1 day');
 		perform web.set_session_data('web-session-3', 'web-3-data', now() + interval '1 day');
 		perform web.set_session_data('web-session-4', 'web-4-data', now() + interval '1 day');
@@ -239,6 +225,7 @@ create or replace function test_web_function_countsessions_ignores_expired()
 returns setof text
 as $$
 	begin 
+		perform web.set_session_data('web-session-1', 'web-1-data', now() + interval '1 day');
 		perform web.set_session_data('web-session-2', 'web-2-data', now() + interval '1 day');
 		perform web.set_session_data('web-session-3', 'web-3-data', now() - interval '1 day');
 		perform web.set_session_data('web-session-4', 'web-4-data', now() + interval '1 day');
@@ -253,13 +240,14 @@ create or replace function test_web_function_countsessions_counts_nulls()
 returns setof text
 as $$
 	begin 
+		perform web.set_session_data('web-session-1', 'web-1-data', now() + interval '1 day');
 		perform web.set_session_data('web-session-2', 'web-2-data', now() + interval '1 day');
 		perform web.set_session_data('web-session-3', 'web-3-data', null);
 		perform web.set_session_data('web-session-4', 'web-4-data', now() + interval '1 day');
 		return next results_eq(
 			'select web.count_sessions()',
 			'values (4)',
-			'Count should ignore expired sessions.');
+			'Count should include expire set to null.');
 	end;
 $$ language plpgsql;
 
@@ -291,6 +279,7 @@ create or replace function test_web_function_deleteexpired_after_insert()
 returns setof text
 as $$
 	begin 
+		perform web.set_session_data('web-session-1', 'web-1-data', now() + interval '1 day');
 		perform web.set_session_data('web-session-2', 'web-2-data', now() + interval '1 day');
 		perform web.set_session_data('web-session-3', 'web-3-data', now() - interval '1 day');
 		perform web.set_session_data('web-session-4', 'web-4-data', now() + interval '1 day');
@@ -305,6 +294,7 @@ create or replace function test_web_function_deleteexpired_after_update()
 returns setof text
 as $$
 	begin 
+		perform web.set_session_data('web-session-1', 'web-1-data', now() + interval '1 day');
 		perform web.set_session_data('web-session-2', 'web-2-data', now() + interval '1 day');
 		perform web.set_session_data('web-session-3', 'web-3-data', now() + interval '1 day');
 		perform web.set_session_data('web-session-4', 'web-4-data', now() + interval '1 day');
