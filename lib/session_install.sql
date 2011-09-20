@@ -1,3 +1,32 @@
+create or replace function setup_10_web()
+returns setof text
+as $test$
+	begin
+		perform web.set_session_data('web-session-1', 'web-1-data', now() + interval '1 day');
+		perform web.set_session_data('web-session-2', 'web-2-data', now() + interval '1 day');
+		perform web.set_session_data('web-session-3', 'web-3-data', now() + interval '1 day');
+		perform web.set_session_data('web-session-4', 'web-4-data', now() + interval '1 day');
+	exception
+		when invalid_schema_name then
+			return;
+		when undefined_function then 
+			return;
+	end;
+$test$ language plpgsql;
+
+create or replace function teardown_10_web()
+returns setof text
+as $test$
+	begin
+		perform web.clear_sessions();
+	exception
+		when invalid_schema_name then
+			return;
+		when undefined_function then 
+			return;
+	end;
+$test$ language plpgsql;
+
 create or replace function test_web_schema()
 returns setof text
 as $$
@@ -155,7 +184,6 @@ create or replace function test_web_function_getsessiondata_data()
 returns setof text
 as $$
 	begin 
-		perform web.set_session_data('web-session-1', 'web-1-data', now() + interval '1 day');
 		return next results_eq (
 			$a$select web.get_session_data('web-session-1')$a$,
 			$a$values ('web-1-data')$a$,
@@ -210,10 +238,6 @@ create or replace function test_web_function_countsessions_returns_count()
 returns setof text
 as $$
 	begin 
-		perform web.set_session_data('web-session-1', 'web-1-data', now() + interval '1 day');
-		perform web.set_session_data('web-session-2', 'web-2-data', now() + interval '1 day');
-		perform web.set_session_data('web-session-3', 'web-3-data', now() + interval '1 day');
-		perform web.set_session_data('web-session-4', 'web-4-data', now() + interval '1 day');
 		return next results_eq(
 			'select web.count_sessions()',
 			'values (4)',
@@ -225,10 +249,7 @@ create or replace function test_web_function_countsessions_ignores_expired()
 returns setof text
 as $$
 	begin 
-		perform web.set_session_data('web-session-1', 'web-1-data', now() + interval '1 day');
-		perform web.set_session_data('web-session-2', 'web-2-data', now() + interval '1 day');
 		perform web.set_session_data('web-session-3', 'web-3-data', now() - interval '1 day');
-		perform web.set_session_data('web-session-4', 'web-4-data', now() + interval '1 day');
 		return next results_eq(
 			'select web.count_sessions()',
 			'values (3)',
@@ -240,10 +261,7 @@ create or replace function test_web_function_countsessions_counts_nulls()
 returns setof text
 as $$
 	begin 
-		perform web.set_session_data('web-session-1', 'web-1-data', now() + interval '1 day');
-		perform web.set_session_data('web-session-2', 'web-2-data', now() + interval '1 day');
 		perform web.set_session_data('web-session-3', 'web-3-data', null);
-		perform web.set_session_data('web-session-4', 'web-4-data', now() + interval '1 day');
 		return next results_eq(
 			'select web.count_sessions()',
 			'values (4)',
@@ -279,13 +297,10 @@ create or replace function test_web_function_deleteexpired_after_insert()
 returns setof text
 as $$
 	begin 
-		perform web.set_session_data('web-session-1', 'web-1-data', now() + interval '1 day');
-		perform web.set_session_data('web-session-2', 'web-2-data', now() + interval '1 day');
-		perform web.set_session_data('web-session-3', 'web-3-data', now() - interval '1 day');
-		perform web.set_session_data('web-session-4', 'web-4-data', now() + interval '1 day');
+		perform web.set_session_data('web-session-5', 'web-5-data', now() - interval '1 day');
 		return next results_eq(
 			'select cast(count(*) as int) from web.session',
-			'values (3)',
+			'values (4)',
 			'Expired sessions should be deleted after insert.');
 	end;
 $$ language plpgsql;
@@ -294,10 +309,6 @@ create or replace function test_web_function_deleteexpired_after_update()
 returns setof text
 as $$
 	begin 
-		perform web.set_session_data('web-session-1', 'web-1-data', now() + interval '1 day');
-		perform web.set_session_data('web-session-2', 'web-2-data', now() + interval '1 day');
-		perform web.set_session_data('web-session-3', 'web-3-data', now() + interval '1 day');
-		perform web.set_session_data('web-session-4', 'web-4-data', now() + interval '1 day');
 		perform web.set_session_data('web-session-3', 'web-3-data', now() - interval '1 day');
 		return next results_eq(
 			'select cast(count(*) as int) from web.session',
