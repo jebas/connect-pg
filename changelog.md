@@ -1,3 +1,7 @@
+# Version 1.1.2
+
+* Made an installation friendly pgTAP startup and teardown. 
+
 # Version 1.1.1
 
 * Fixed a database installation issue.
