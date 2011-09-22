@@ -2,6 +2,7 @@ create or replace function setup_10_web()
 returns setof text
 as $test$
 	begin
+		perform web.clear_sessions();
 		perform web.set_session_data('web-session-1', 'web-1-data', now() + interval '1 day');
 		perform web.set_session_data('web-session-2', 'web-2-data', now() + interval '1 day');
 		perform web.set_session_data('web-session-3', 'web-3-data', now() + interval '1 day');
@@ -18,7 +19,6 @@ create or replace function teardown_10_web()
 returns setof text
 as $test$
 	begin
-		perform web.clear_sessions();
 	exception
 		when invalid_schema_name then
 			return;

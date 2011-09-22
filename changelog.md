@@ -1,3 +1,8 @@
+# Version 1.1.3
+
+* Altered the database setup and teardown functions to 
+work with filled database.  
+
 # Version 1.1.2
 
 * Made an installation friendly pgTAP startup and teardown. 
