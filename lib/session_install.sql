@@ -3,10 +3,6 @@ returns setof text
 as $test$
 	begin
 		perform web.clear_sessions();
-		perform web.set_session_data('web-session-1', 'web-1-data', now() + interval '1 day');
-		perform web.set_session_data('web-session-2', 'web-2-data', now() + interval '1 day');
-		perform web.set_session_data('web-session-3', 'web-3-data', now() + interval '1 day');
-		perform web.set_session_data('web-session-4', 'web-4-data', now() + interval '1 day');
 	exception
 		when invalid_schema_name then
 			return;
@@ -15,15 +11,37 @@ as $test$
 	end;
 $test$ language plpgsql;
 
-create or replace function teardown_10_web()
-returns setof text
-as $test$
+create or replace function new_session_id()
+returns text as $test$
+	declare
+		sessionid		text;
+		holder			text;
 	begin
-	exception
-		when invalid_schema_name then
-			return;
-		when undefined_function then 
-			return;
+		loop
+			select md5(random()::text) into sessionid;
+			select sess_id into holder from web.session
+				where sess_id = sessionid;
+			if found then
+				continue;
+			else
+				return sessionid;
+			end if;
+		end loop;
+	end;
+$test$ language plpgsql;
+
+create or replace function create_test_session()
+returns web.session as $test$
+	declare
+		sessionid		text;
+		session 		web.session%rowtype;
+	begin
+		select into sessionid new_session_id();
+		perform web.set_session_data(sessionid, md5(random()::text),
+			now() + interval '1 day');
+		select * into session from web.session
+			where sess_id = sessionid;
+		return session;
 	end;
 $test$ language plpgsql;
 
@@ -127,27 +145,35 @@ $$ language plpgsql;
 
 create or replace function test_web_function_setsessiondata_save_data()
 returns setof text
-as $$
-	begin 
-		perform web.set_session_data('web-new-session', 'new-data', null);
+as $test$
+	declare
+		sessionid		text;
+		sessiondata		text;
+	begin
+		select into sessionid new_session_id();
+		select md5(random()::text) into sessiondata;
+		perform web.set_session_data(sessionid, sessiondata, null);
 		return next results_eq(
-			$a$select web.get_session_data('web-new-session')$a$,
-			$a$values ('new-data')$a$,
+			$$select web.get_session_data('$$ || sessionid || $$')$$,
+			$$values ('$$ || sessiondata || $$')$$,
 			'The set_session_data should create a new session.');
 	end;
-$$ language plpgsql;
+$test$ language plpgsql;
 
 create or replace function test_web_function_setsessiondata_update_data()
 returns setof text
-as $$
-	begin 
-		perform web.set_session_data('web-session-1', 'new-data', now() + interval '1 day');
+as $test$
+	declare
+		sessionid			text;
+	begin
+		select sess_id into sessionid from create_test_session();
+		perform web.set_session_data(sessionid, 'new-data', now() + interval '1 day');
 		return next results_eq(
-			$a$select web.get_session_data('web-session-1')$a$,
-			$a$values ('new-data')$a$,
+			$$select web.get_session_data('$$ || sessionid || $$')$$,
+			$$values ('new-data')$$,
 			'The set_session_data should update a session.');
 	end;
-$$ language plpgsql;
+$test$ language plpgsql;
 
 create or replace function test_web_function_destroysession_exists()
 returns setof text
@@ -161,14 +187,17 @@ $$ language plpgsql;
 
 create or replace function test_web_function_destroysession_removes_data()
 returns setof text
-as $$
+as $test$
+	declare 
+		sessionid			text;
 	begin
-		perform web.destroy_session('web-session-1');
+		select sess_id into sessionid from create_test_session();
+		perform web.destroy_session(sessionid);
 		return next is_empty(
-			$a$select web.get_session_data('web-session-1')$a$,
+			$$select web.get_session_data('$$ || sessionid || $$')$$,
 			'Session destroy should delete the session');
 	end;
-$$ language plpgsql;
+$test$ language plpgsql;
 
 create or replace function test_web_function_getsessiondata_exists()
 returns setof text
@@ -182,25 +211,35 @@ $$ language plpgsql;
 
 create or replace function test_web_function_getsessiondata_data()
 returns setof text
-as $$
-	begin 
-		return next results_eq (
-			$a$select web.get_session_data('web-session-1')$a$,
-			$a$values ('web-1-data')$a$,
+as $test$
+	declare 
+		sessionid			text;
+		sessiondata			text;
+	begin
+		select into sessionid, sessiondata sess_id, sess_data
+			from create_test_session();
+		return next results_eq(
+			$$select web.get_session_data('$$ || sessionid || $$')$$,
+			$$values ('$$ || sessiondata || $$')$$,
 			'Get session data should retrieve the data from the session.');
 	end;
-$$ language plpgsql;
+$test$ language plpgsql;
 
 create or replace function test_web_function_getsessiondata_ignores_expired()
 returns setof text
-as $$
+as $test$
+	declare 
+		sessionid			text;
+		sessiondata			text;
 	begin
-		perform web.set_session_data('web-session-1', 'web-1-data', now() - interval '1 day');
+		select into sessionid, sessiondata sess_id, sess_data
+			from create_test_session();
+		perform web.set_session_data(sessionid, sessiondata, now() - interval '1 day');
 		return next is_empty(
-			$a$select web.get_session_data('web-session-1')$a$,
+			$$select web.get_session_data('$$ || sessionid || $$')$$,
 			'Get session data ignores expired sessions.');
 	end;
-$$ language plpgsql;
+$test$ language plpgsql;
 
 create or replace function test_web_function_clearsessions_exists()
 returns setof text
@@ -214,15 +253,16 @@ $$ language plpgsql;
 
 create or replace function test_web_function_clearsessions_removes_data()
 returns setof text
-as $$
+as $test$
 	begin
+		perform create_test_session();
+		perform create_test_session();
 		perform web.clear_sessions();
-		return next results_eq(
-			'select web.count_sessions()',
-			'values (0)',
+		return next is_empty(
+			$$select * from web.session$$,
 			'Clear sessions should remove all sessions.');
 	end;  
-$$ language plpgsql;
+$test$ language plpgsql;
 
 create or replace function test_web_function_countsessions_exists()
 returns setof text
@@ -237,7 +277,11 @@ $$ language plpgsql;
 create or replace function test_web_function_countsessions_returns_count()
 returns setof text
 as $$
-	begin 
+	begin
+		perform create_test_session();
+		perform create_test_session();
+		perform create_test_session();
+		perform create_test_session();
 		return next results_eq(
 			'select web.count_sessions()',
 			'values (4)',
@@ -248,8 +292,16 @@ $$ language plpgsql;
 create or replace function test_web_function_countsessions_ignores_expired()
 returns setof text
 as $$
-	begin 
-		perform web.set_session_data('web-session-3', 'web-3-data', now() - interval '1 day');
+	declare 
+		sessionid			text;
+		sessiondata			text;
+	begin
+		select into sessionid, sessiondata sess_id, sess_data
+			from create_test_session();
+		perform web.set_session_data(sessionid, sessiondata, now() - interval '1 day');
+		perform create_test_session();
+		perform create_test_session();
+		perform create_test_session();
 		return next results_eq(
 			'select web.count_sessions()',
 			'values (3)',
@@ -260,8 +312,16 @@ $$ language plpgsql;
 create or replace function test_web_function_countsessions_counts_nulls()
 returns setof text
 as $$
-	begin 
-		perform web.set_session_data('web-session-3', 'web-3-data', null);
+	declare 
+		sessionid			text;
+		sessiondata			text;
+	begin
+		select into sessionid, sessiondata sess_id, sess_data
+			from create_test_session();
+		perform web.set_session_data(sessionid, sessiondata, null);
+		perform create_test_session();
+		perform create_test_session();
+		perform create_test_session();
 		return next results_eq(
 			'select web.count_sessions()',
 			'values (4)',
@@ -295,27 +355,37 @@ $$ language plpgsql;
 
 create or replace function test_web_function_deleteexpired_after_insert()
 returns setof text
-as $$
-	begin 
-		perform web.set_session_data('web-session-5', 'web-5-data', now() - interval '1 day');
-		return next results_eq(
-			'select cast(count(*) as int) from web.session',
-			'values (4)',
-			'Expired sessions should be deleted after insert.');
+as $test$
+	declare
+		sessionid		text;
+		sessiondata		text;
+	begin
+		select into sessionid new_session_id();
+		select md5(random()::text) into sessiondata;
+		perform web.set_session_data(sessionid, sessiondata, now() - interval '1 day');
+		return next is_empty(
+			$$select * from web.session 
+				where sess_id = '$$ || sessionid || $$'$$,
+				'Expired sessions should be deleted after insert.');
 	end;
-$$ language plpgsql;
+$test$ language plpgsql;
 
 create or replace function test_web_function_deleteexpired_after_update()
 returns setof text
-as $$
-	begin 
-		perform web.set_session_data('web-session-3', 'web-3-data', now() - interval '1 day');
-		return next results_eq(
-			'select cast(count(*) as int) from web.session',
-			'values (3)',
-			'Expired sessions should be deleted after insert.');
+as $test$
+	declare 
+		sessionid			text;
+		sessiondata			text;
+	begin
+		select into sessionid, sessiondata sess_id, sess_data
+			from create_test_session();
+		perform web.set_session_data(sessionid, sessiondata, now() - interval '1 day');
+		return next is_empty(
+			$$select * from web.session 
+				where sess_id = '$$ || sessionid || $$'$$,
+				'Expired sessions should be deleted after update.');
 	end;
-$$ language plpgsql;
+$test$ language plpgsql;
 
 create or replace function test_web_function_allids_is_removed()
 returns setof text

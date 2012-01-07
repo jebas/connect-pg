@@ -89,7 +89,7 @@ describe('connect-pg', function () {
 		});
 		
 		it('should keep callback optional', function () {
-			var pgStore = this.pgStore
+			var pgStore = this.pgStore;
 			expect(function () {
 					pgStore.set('new-session', '{}');
 				}).not.toThrow();
@@ -174,7 +174,7 @@ describe('connect-pg', function () {
 		});
 		
 		it('should keep callback optional', function () {
-			var pgStore = this.pgStore
+			var pgStore = this.pgStore;
 			expect(function () {
 					pgStore.destroy('session-1');
 				}).not.toThrow();
@@ -253,7 +253,7 @@ describe('connect-pg', function () {
 		});
 		
 		it('should keep callback optional', function () {
-			var pgStore = this.pgStore
+			var pgStore = this.pgStore;
 			expect(function () {
 					pgStore.clear();
 				}).not.toThrow();
