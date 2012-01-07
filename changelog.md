@@ -1,3 +1,7 @@
+# Version 1.1.4
+
+* Streamlines the pgtap testing scripts.  No change to the program.
+
 # Version 1.1.3
 
 * Altered the database setup and teardown functions to 
