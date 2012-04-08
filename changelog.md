@@ -1,3 +1,9 @@
+# Version 1.1.5
+
+* Corrected create_test_sesssion function so it's created on 
+a new installation.  
+* No changes to the installation or program.  
+
 # Version 1.1.4
 
 * Streamlines the pgtap testing scripts.  No change to the program.

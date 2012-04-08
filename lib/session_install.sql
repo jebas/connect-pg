@@ -31,17 +31,14 @@ returns text as $test$
 $test$ language plpgsql;
 
 create or replace function create_test_session()
-returns web.session as $test$
+returns text as $test$
 	declare
 		sessionid		text;
-		session 		web.session%rowtype;
 	begin
 		select into sessionid new_session_id();
 		perform web.set_session_data(sessionid, md5(random()::text),
 			now() + interval '1 day');
-		select * into session from web.session
-			where sess_id = sessionid;
-		return session;
+		return sessionid;
 	end;
 $test$ language plpgsql;
 
@@ -166,7 +163,7 @@ as $test$
 	declare
 		sessionid			text;
 	begin
-		select sess_id into sessionid from create_test_session();
+		select create_test_session into sessionid from create_test_session();
 		perform web.set_session_data(sessionid, 'new-data', now() + interval '1 day');
 		return next results_eq(
 			$$select web.get_session_data('$$ || sessionid || $$')$$,
@@ -191,7 +188,7 @@ as $test$
 	declare 
 		sessionid			text;
 	begin
-		select sess_id into sessionid from create_test_session();
+		select into sessionid create_test_session from create_test_session();
 		perform web.destroy_session(sessionid);
 		return next is_empty(
 			$$select web.get_session_data('$$ || sessionid || $$')$$,
@@ -214,10 +211,10 @@ returns setof text
 as $test$
 	declare 
 		sessionid			text;
-		sessiondata			text;
+		sessiondata			text:=md5(random()::text);
 	begin
-		select into sessionid, sessiondata sess_id, sess_data
-			from create_test_session();
+		select into sessionid create_test_session from create_test_session();
+		perform web.set_session_data(sessionid, sessiondata, null);
 		return next results_eq(
 			$$select web.get_session_data('$$ || sessionid || $$')$$,
 			$$values ('$$ || sessiondata || $$')$$,
@@ -230,9 +227,9 @@ returns setof text
 as $test$
 	declare 
 		sessionid			text;
-		sessiondata			text;
+		sessiondata			text:=md5(random()::text);
 	begin
-		select into sessionid, sessiondata sess_id, sess_data
+		select into sessionid create_test_session
 			from create_test_session();
 		perform web.set_session_data(sessionid, sessiondata, now() - interval '1 day');
 		return next is_empty(
@@ -294,9 +291,9 @@ returns setof text
 as $$
 	declare 
 		sessionid			text;
-		sessiondata			text;
+		sessiondata			text:=md5(random()::text);
 	begin
-		select into sessionid, sessiondata sess_id, sess_data
+		select into sessionid create_test_session
 			from create_test_session();
 		perform web.set_session_data(sessionid, sessiondata, now() - interval '1 day');
 		perform create_test_session();
@@ -314,9 +311,9 @@ returns setof text
 as $$
 	declare 
 		sessionid			text;
-		sessiondata			text;
+		sessiondata			text:=md5(random()::text);
 	begin
-		select into sessionid, sessiondata sess_id, sess_data
+		select into sessionid create_test_session
 			from create_test_session();
 		perform web.set_session_data(sessionid, sessiondata, null);
 		perform create_test_session();
@@ -375,9 +372,9 @@ returns setof text
 as $test$
 	declare 
 		sessionid			text;
-		sessiondata			text;
+		sessiondata			text:=md5(random()::text);
 	begin
-		select into sessionid, sessiondata sess_id, sess_data
+		select into sessionid create_test_session
 			from create_test_session();
 		perform web.set_session_data(sessionid, sessiondata, now() - interval '1 day');
 		return next is_empty(
