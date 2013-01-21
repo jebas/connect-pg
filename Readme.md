@@ -82,22 +82,22 @@ connection user, and setting permissions.  To use connect-pg in your
 Express of Connection application, you will need to create a function 
 whose callback will contain a pg client.  The following is an example:
 
-<pre><code>
-	var pg = require('pg');
+```javascript
+var pg = require('pg');
 
-	function pgConnect (callback) {
-		pg.connect('tcp://nodepg:password@localhost/pgstore',
-			function (err, client) {
-				if (err) {
-					console.log(JSON.stringify(err));
-				}
-				if (client) {
-					callback(client);
-				}
+function pgConnect (callback) {
+	pg.connect('tcp://nodepg:password@localhost/pgstore',
+		function (err, client) {
+			if (err) {
+				console.log(JSON.stringify(err));
 			}
-		);
-	};
-</code></pre>
+			if (client) {
+				callback(client);
+			}
+		}
+	);
+};
+```
 
 Obviously, you would change the pg connection string to something 
 appropriate for your system.  
@@ -107,16 +107,10 @@ appropriate for your system.
 	`var PGStore = require('connect-pg');`
 
 3. Setup the session software to use the connect-pg for storage.  
-
-	* **In connect:**
-	
-		`connect.session({ store: new PGStore(pgConnect), 
-		secret: 'keyboard cat'});`
-		
-	* **In Express:**
-	
-		`app.use(express.session({store: new PGStore(pgConnect), 
-		secret: 'keyboard cat'}));`
+  * **In connect:**
+    `connect.session({ store: new PGStore(pgConnect), secret: 'keyboard cat'});`
+  * **In Express:**
+    `app.use(express.session({store: new PGStore(pgConnect), secret: 'keyboard cat'}));`
 
 ## Development 
 
