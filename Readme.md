@@ -104,7 +104,21 @@ appropriate for your system.
 
 2. Include the requirement for connect-pg.
 
-	`var PGStore = require('connect-pg');`
+  * With express4:
+
+    var session = require('express-session');
+    var PGStore = require('connect-pg')(session);
+
+  * With express<4:
+
+    var express = require('express');
+    var PGStore = require('connect-pg')(express);
+
+  * With connect:
+
+    var connect = require('connect');
+    var PGStore = require('connect-pg')(connect);
+
 
 3. Setup the session software to use the connect-pg for storage.  
 
